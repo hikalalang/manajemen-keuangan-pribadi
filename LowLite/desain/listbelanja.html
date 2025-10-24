@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <title>FlowLite - List Belanja</title>
+  </head>
+  <body>
+    <div class="app-container">
+      <header class="app-header">
+        <div class="app-logo">
+          <span style="font-family: var(--logo-font)">LOWLITE</span
+          ><i
+            class="fas fa-lightbulb"
+            style="color: var(--highlight-active)"
+          ></i>
+        </div>
+        <a href="index.html" class="logout-btn"
+          >Out <i class="fas fa-arrow-right"></i
+        ></a>
+      </header>
+      <aside class="sidebar">
+        <div class="sidebar-profile">
+          <i class="fas fa-user-circle"></i><span>username</span>
+        </div>
+        <nav class="sidebar-nav">
+          <a href="dompet.html" class="nav-dompet">DOMPET</a>
+          <a href="input_pemasukan.html" class="nav-pemasukan">PEMASUKKAN</a>
+          <a href="input_pengeluaran.html" class="nav-pengeluaran"
+            >PENGELUARAN</a
+          >
+          <a href="list_belanja.html" class="nav-list active">LIST BELANJA</a>
+          <a href="laporan.html" class="nav-laporan">LAPORAN</a>
+        </nav>
+      </aside>
+      <main class="main-content">
+        <h2>List Belanja</h2>
+        <div class="content-box">
+          <div class="list-belanja-header">
+            <h3>Daftar Kebutuhan Bulan Ini</h3>
+            <a href="#modal-tambah" class="btn-tambah-item"
+              ><i class="fas fa-plus"></i> Tambah Item</a
+            >
+          </div>
+          <table class="belanja-table">
+            <thead>
+              <tr>
+                <th>Status</th>
+                <th>Nama Item</th>
+                <th>Perkiraan Harga</th>
+                <th>Prioritas</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="completed">
+                <td>
+                  <input type="checkbox" class="status-checkbox" checked />
+                </td>
+                <td>Beras (5 kg)</td>
+                <td>Rp65.000</td>
+                <td>Normal</td>
+                <td>
+                  <button class="btn-aksi" title="Hapus">
+                    <i class="fas fa-trash-alt"></i>
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <td><input type="checkbox" class="status-checkbox" /></td>
+                <td>Sabun Mandi</td>
+                <td>Rp30.000</td>
+                <td>Tinggi</td>
+                <td>
+                  <button class="btn-aksi" title="Hapus">
+                    <i class="fas fa-trash-alt"></i>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>

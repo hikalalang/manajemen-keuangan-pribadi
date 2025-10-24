@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FlowLite - Dompet</title>
+    <link rel="stylesheet" href="style.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+  </head>
+  <body>
+    <div class="app-container">
+      <header class="app-header">
+        <div class="app-logo">
+          <span style="font-family: var(--logo-font)">LOWLITE</span>
+          <i
+            class="fas fa-lightbulb"
+            style="color: var(--highlight-active)"
+          ></i>
+        </div>
+        <a href="index.html" class="logout-btn"
+          >Out <i class="fas fa-arrow-right"></i
+        ></a>
+      </header>
+
+      <aside class="sidebar">
+        <div class="sidebar-profile">
+          <i class="fas fa-user-circle"></i>
+          <span>username</span>
+        </div>
+        <nav class="sidebar-nav">
+          <a href="dompet.html" class="nav-dompet active">DOMPET</a>
+          <a href="#" class="nav-input">INPUT DATA</a>
+          <a href="input_pemasukan.html" class="nav-pemasukan">PEMASUKKAN</a>
+          <a href="input_pengeluaran.html" class="nav-pengeluaran"
+            >PENGELUARAN</a
+          >
+          <a href="listbelanja.html" class="nav-list">LIST BELANJA</a>
+          <a href="laporan.html" class="nav-laporan">LAPORAN</a>
+        </nav>
+      </aside>
+
+      <main class="main-content">
+        <h2>Oktober 2025</h2>
+        <div class="dompet-summary">
+          <div class="dompet-card">
+            <h3>Rp100.000.000.000,00</h3>
+            <p>Pemasukkan</p>
+          </div>
+          <div class="dompet-card">
+            <h3>Rp99.201.000.000,00</h3>
+            <p>Pengeluaran</p>
+            <p class="pengeluaran-detail">Rp799.000.000,00</p>
+          </div>
+        </div>
+        
+
+            <div class="content-box diagram-placeholder">
+              <h3 class="chart-title">
+                Perbandingan Pemasukan vs. Pengeluaran (Total)
+              </h3>
+
+              <div class="bar-chart-container">
+                <div class="chart-bar bar-pemasukan" style="width: 99%">
+                  Pemasukkan
+                  <span class="bar-label">100 Triliun</span>
+                </div>
+
+                <div class="chart-bar bar-pengeluaran" style="width: 80%">
+                  Pengeluaran
+                  <span class="bar-label">99.2 Triliun</span>
+                </div>
+              </div>
+            </div>
+          </main>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>
