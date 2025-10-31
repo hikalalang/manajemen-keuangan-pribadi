@@ -1,3 +1,11 @@
+<?php
+// index.php - Homepage aplikasi FlowLite Manajemen Keuangan Pribadi
+// Kode ini adalah versi PHP dari HTML yang Anda berikan. Saya menambahkan logika sederhana untuk session (untuk login/logout) agar lebih dinamis.
+// Jika Anda ingin mengintegrasikan dengan database atau fitur lengkap (seperti yang saya buat sebelumnya), beri tahu saya.
+// Pastikan file ini disimpan sebagai index.php dan dijalankan di server web dengan PHP (misalnya, XAMPP).
+session_start();  // Mulai session untuk mendukung autentikasi user
+// require_once 'functions.php';  // Uncomment jika ada file functions.php dari aplikasi lengkap; hapus jika tidak ada
+?>
 <!DOCTYPE html>
 <html lang="id">
   <head>
@@ -17,13 +25,20 @@
   <body class="dashboard-body">
     <header class="header">
       <div class="logo">
-        <span class="logo-text-nav">LOWLITE</span>
+        <span class="logo-text-nav">FLOWLITE</span>  <!-- Diperbaiki dari "LOWLITE" ke "FLOWLITE" untuk konsistensi dengan title -->
       </div>
       <nav class="navbar">
         <a href="#home">HOME</a>
         <a href="#dompet">DOMPETKU</a>
         <a href="#contact">CONTACT</a> 
-        <a href="signup.html" class="btn-login-form">Sign in</a>
+        <?php if (isset($_SESSION['user_id'])): ?>
+          <!-- Jika user sudah login, tampilkan Dashboard dan Logout -->
+          <a href="dashboard.php" class="btn-login-form">Dashboard</a>
+          <a href="logout.php" class="btn-login-form">Logout</a>
+        <?php else: ?>
+          <!-- Jika belum login, tampilkan Sign in -->
+          <a href="signup.html" class="btn-login-form">Sign in</a>
+        <?php endif; ?>
       </nav>
     </header>
 
@@ -38,7 +53,13 @@
             interaktif. Aplikasi web kami dirancang untuk membuat manajemen
             keuangan sederhana, aman, dan menyenangkan - tanpa ribet!"
           </p>
-          <a href="login.html" class="btn-start">Get Started</a>
+          <?php if (!isset($_SESSION['user_id'])): ?>
+            <!-- Jika belum login, tampilkan tombol Get Started -->
+            <a href="login.html" class="btn-start">Get Started</a>
+          <?php else: ?>
+            <!-- Jika sudah login, arahkan ke dashboard -->
+            <a href="dashboard.php" class="btn-start">Go to Dashboard</a>
+          <?php endif; ?>
         </div>
         <div class="hero-image">
           <img src="LowLite.jpg" alt="Ilustrasi Uang" class="tint-image" />
@@ -95,8 +116,18 @@
       </section>
 
       <section class="contact-section" id="contact">
-    <h2>CONTACT US</h2>
-</section>
+        <h2>CONTACT US</h2>
+        <!-- Tambahkan form contact jika diperlukan -->
+        <p>Jika Anda memiliki pertanyaan atau saran, hubungi kami melalui informasi di bawah atau gunakan formulir berikut.</p>
+        <form action="process_contact.php" method="post">  <!-- Asumsi ada file process_contact.php -->
+          <label for="name">Nama:</label>
+          <input type="text" id="name" name="name" required>
+          <label for="email">Email:</label>
+          <input type="email" id="email" name="email" required>
+          <label for="message">Pesan:</label>
+          <textarea id="message" name="message" rows="5" required></textarea>
+          <button type="submit">Kirim</button>
+        </form>
       </section>
     </main>
 
@@ -107,7 +138,7 @@
       </div>
       
       <div class="footer-copyright">
-        <span class="logo-text-footer">LOWLITE</span>
+        <span class="logo-text-footer">FLOWLITE</span>  <!-- Diperbaiki untuk konsistensi -->
       </div>
     </footer>
   </body>
