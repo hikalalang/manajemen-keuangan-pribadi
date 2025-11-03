@@ -1,145 +1,93 @@
 <?php
-// index.php - Homepage aplikasi FlowLite Manajemen Keuangan Pribadi
-// Kode ini adalah versi PHP dari HTML yang Anda berikan. Saya menambahkan logika sederhana untuk session (untuk login/logout) agar lebih dinamis.
-// Jika Anda ingin mengintegrasikan dengan database atau fitur lengkap (seperti yang saya buat sebelumnya), beri tahu saya.
-// Pastikan file ini disimpan sebagai index.php dan dijalankan di server web dengan PHP (misalnya, XAMPP).
-session_start();  // Mulai session untuk mendukung autentikasi user
-// require_once 'functions.php';  // Uncomment jika ada file functions.php dari aplikasi lengkap; hapus jika tidak ada
+include 'koneksi.php';
+
+// Query ringkasan
+$query_ringkasan = "SELECT 
+    SUM(CASE WHEN jenis = 'pemasukan' THEN jumlah ELSE 0 END) AS total_pemasukan,
+    SUM(CASE WHEN jenis = 'pengeluaran' THEN jumlah ELSE 0 END) AS total_pengeluaran,
+    (SUM(CASE WHEN jenis = 'pemasukan' THEN jumlah ELSE 0 END) - SUM(CASE WHEN jenis = 'pengeluaran' THEN jumlah ELSE 0 END)) AS saldo
+    FROM transaksi";
+$result_ringkasan = mysqli_query($conn, $query_ringkasan);
+$ringkasan = mysqli_fetch_assoc($result_ringkasan);
+
+// Query transaksi terbaru
+$query_transaksi = "SELECT t.*, a.nama_akun FROM transaksi t JOIN akun a ON t.id_akun = a.id ORDER BY t.tanggal DESC LIMIT 5";
+$result_transaksi = mysqli_query($conn, $query_transaksi);
 ?>
+
 <!DOCTYPE html>
 <html lang="id">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>FlowLite Manajemen Keuangan Pribadi</title>
-    <link rel="stylesheet" href="style.css" />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
-    />
-  </head>
-  <body class="dashboard-body">
-    <header class="header">
-      <div class="logo">
-        <span class="logo-text-nav">FLOWLITE</span>  <!-- Diperbaiki dari "LOWLITE" ke "FLOWLITE" untuk konsistensi dengan title -->
-      </div>
-      <nav class="navbar">
-        <a href="#home">HOME</a>
-        <a href="#dompet">DOMPETKU</a>
-        <a href="#contact">CONTACT</a> 
-        <?php if (isset($_SESSION['user_id'])): ?>
-          <!-- Jika user sudah login, tampilkan Dashboard dan Logout -->
-          <a href="dashboard.php" class="btn-login-form">Dashboard</a>
-          <a href="logout.php" class="btn-login-form">Logout</a>
-        <?php else: ?>
-          <!-- Jika belum login, tampilkan Sign in -->
-          <a href="signup.html" class="btn-login-form">Sign in</a>
-        <?php endif; ?>
-      </nav>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Keuangan</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; }
+        header { background-color: #4CAF50; color: white; padding: 1rem; text-align: center; }
+        nav { background-color: #333; color: white; padding: 0.5rem; }
+        nav a { color: white; margin: 0 1rem; text-decoration: none; }
+        .container { max-width: 1200px; margin: 2rem auto; padding: 1rem; background: white; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        .summary { display: flex; justify-content: space-around; margin-bottom: 2rem; }
+        .summary div { text-align: center; padding: 1rem; border: 1px solid #ddd; border-radius: 5px; flex: 1; margin: 0 0.5rem; }
+        .summary h3 { margin: 0; color: #4CAF50; }
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        table th, table td { border: 1px solid #ddd; padding: 0.5rem; text-align: left; }
+        table th { background-color: #f2f2f2; }
+        footer { text-align: center; padding: 1rem; background-color: #333; color: white; margin-top: 2rem; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Manajemen Keuangan Pribadi</h1>
     </header>
-
-    <main>
-      <section class="hero-section" id="home">
-        <div class="hero-content">
-          <h1>WELCOME TO FLOWLITE</h1>
-          <p>
-            "Dengan FlowLite, catat pemasukan dan pengeluaran Anda dalam
-            hitungan detik, rencanakan pengeluaran bulanan dengan kiat yang
-            mudah diakses, dan lihat overview keuangan melalui diagram
-            interaktif. Aplikasi web kami dirancang untuk membuat manajemen
-            keuangan sederhana, aman, dan menyenangkan - tanpa ribet!"
-          </p>
-          <?php if (!isset($_SESSION['user_id'])): ?>
-            <!-- Jika belum login, tampilkan tombol Get Started -->
-            <a href="login.html" class="btn-start">Get Started</a>
-          <?php else: ?>
-            <!-- Jika sudah login, arahkan ke dashboard -->
-            <a href="dashboard.php" class="btn-start">Go to Dashboard</a>
-          <?php endif; ?>
+    <nav>
+        <a href="index.php">Home</a>
+        <a href="tambah_transaksi.php">Tambah Transaksi</a>
+        <a href="laporan.php">Laporan</a>
+    </nav>
+    <div class="container">
+        <h2>Ringkasan Keuangan</h2>
+        <div class="summary">
+            <div>
+                <h3>Total Saldo</h3>
+                <p>Rp <?php echo number_format($ringkasan['saldo'] ?? 0, 0, ',', '.'); ?></p>
+            </div>
+            <div>
+                <h3>Total Pemasukan</h3>
+                <p>Rp <?php echo number_format($ringkasan['total_pemasukan'] ?? 0, 0, ',', '.'); ?></p>
+            </div>
+            <div>
+                <h3>Total Pengeluaran</h3>
+                <p>Rp <?php echo number_format($ringkasan['total_pengeluaran'] ?? 0, 0, ',', '.'); ?></p>
+            </div>
         </div>
-        <div class="hero-image">
-          <img src="LowLite.jpg" alt="Ilustrasi Uang" class="tint-image" />
-        </div>
-      </section>
-
-      <section class="feature-section" id="home">
-        <h2>FEATURE</h2>
-
-        <div class="feature-item feature-reverse">
-          <div class="feature-image">
-            <img src="money.jpg" alt="Ilustrasi Anggaran" />
-          </div>
-          <div class="feature-text">
-            <p>
-              "Dengan FlowLite, catat pemasukan dan pengeluaran Anda dalam
-              hitungan detik, rencanakan pengeluaran bulanan dengan kiat yang
-              mudah diakses, dan lihat overview keuangan melalui diagram
-              interaktif. Aplikasi web kami dirancang untuk membuat manajemen
-              keuangan sederhana, aman, dan menyenangkan - tanpa ribet!"
-            </p>
-          </div>
-        </div>
-
-        <div class="feature-item">
-          <div class="feature-image">
-            <img src="savemoney.jpg" alt="Ilustrasi Daftar Belanja" />
-          </div>
-          <div class="feature-text">
-            <p>
-              "Dengan FlowLite, catat pemasukan dan pengeluaran Anda dalam
-              hitungan detik, rencanakan pengeluaran bulanan dengan kiat yang
-              mudah diakses, dan lihat overview keuangan melalui diagram
-              interaktif. Aplikasi web kami dirancang untuk membuat manajemen
-              keuangan sederhana, aman, dan menyenangkan - tanpa ribet!"
-            </p>
-          </div>
-        </div>
-
-        <div class="feature-item feature-reverse">
-          <div class="feature-image">
-            <img src="moneycat.jpg" alt="Ilustrasi Pertumbuhan Keuangan" />
-          </div>
-          <div class="feature-text">
-            <p>
-              "Dengan FlowLite, catat pemasukan dan pengeluaran Anda dalam
-              hitungan detik, rencanakan pengeluaran bulanan dengan kiat yang
-              mudah diakses, dan lihat overview keuangan melalui diagram
-              interaktif. Aplikasi web kami dirancang untuk membuat manajemen
-              keuangan sederhana, aman, dan menyenangkan - tanpa ribet!"
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <section class="contact-section" id="contact">
-        <h2>CONTACT US</h2>
-        <!-- Tambahkan form contact jika diperlukan -->
-        <p>Jika Anda memiliki pertanyaan atau saran, hubungi kami melalui informasi di bawah atau gunakan formulir berikut.</p>
-        <form action="process_contact.php" method="post">  <!-- Asumsi ada file process_contact.php -->
-          <label for="name">Nama:</label>
-          <input type="text" id="name" name="name" required>
-          <label for="email">Email:</label>
-          <input type="email" id="email" name="email" required>
-          <label for="message">Pesan:</label>
-          <textarea id="message" name="message" rows="5" required></textarea>
-          <button type="submit">Kirim</button>
-        </form>
-      </section>
-    </main>
-
-    <footer class="footer">
-      <div class="footer-contact">
-        <p><i class="fas fa-phone-alt"></i> 081278374985</p>
-        <p><i class="far fa-envelope"></i> Flowlite@gmail.com</p>
-      </div>
-      
-      <div class="footer-copyright">
-        <span class="logo-text-footer">FLOWLITE</span>  <!-- Diperbaiki untuk konsistensi -->
-      </div>
+        
+        <h2>Transaksi Terbaru</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Tanggal</th>
+                    <th>Akun</th>
+                    <th>Jenis</th>
+                    <th>Jumlah</th>
+                    <th>Deskripsi</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php while ($row = mysqli_fetch_assoc($result_transaksi)): ?>
+                <tr>
+                    <td><?php echo $row['tanggal']; ?></td>
+                    <td><?php echo $row['nama_akun']; ?></td>
+                    <td><?php echo ucfirst($row['jenis']); ?></td>
+                    <td>Rp <?php echo number_format($row['jumlah'], 0, ',', '.'); ?></td>
+                    <td><?php echo $row['deskripsi']; ?></td>
+                </tr>
+                <?php endwhile; ?>
+            </tbody>
+        </table>
+    </div>
+    <footer>
+        <p>&copy; 2023 Aplikasi Manajemen Keuangan.</p>
     </footer>
-  </body>
+</body>
 </html>
