@@ -1,5 +1,24 @@
 <?php
+// Wajib: Mulai session di awal skrip
+session_start();
+
+// Asumsikan 'koneksi.php' berisi $conn (koneksi MySQLi)
+// PASTIKAN FILE KONEKSI.PHP JUGA ADA DAN BENAR
 include 'koneksi.php';
+
+// --- FUNGSI SANITIZE (DIBUTUHKAN) ---
+// Definisi fungsi untuk membersihkan data input
+if (!function_exists('sanitize')) {
+    function sanitize($conn, $data) {
+        if (!isset($conn) || !$conn) {
+            return trim(stripslashes($data));
+        }
+        $data = trim($data);
+        $data = stripslashes($data);
+        $data = mysqli_real_escape_string($conn, $data);
+        return $data;
+    }
+}
 
 // Jika sudah login, arahkan ke dashboard
 if (isset($_SESSION['user_id'])) {
@@ -11,10 +30,12 @@ $message = '';
 $error = '';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $username = sanitize($conn, $_POST['username']);
-    $email = sanitize($conn, $_POST['email']);
-    $password = $_POST['password'];
-    $password_confirm = $_POST['password_confirm'];
+    
+    // Menggunakan Null Coalescing Operator (?? '') untuk mencegah Notice PHP
+    $username = sanitize($conn, $_POST['username'] ?? '');
+    $email = sanitize($conn, $_POST['email'] ?? '');
+    $password = $_POST['password'] ?? '';
+    $password_confirm = $_POST['password_confirm'] ?? '';
 
     // Validasi input dasar
     if (empty($username) || empty($email) || empty($password) || empty($password_confirm)) {
@@ -40,6 +61,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $insert_query = "INSERT INTO users (username, email, password) VALUES ('$username', '$email', '$hashed_password')";
             
             if (mysqli_query($conn, $insert_query)) {
+                unset($_POST['password'], $_POST['password_confirm']);
                 $message = "Registrasi berhasil! Silakan <a href='login.php' class='text-green-600'>Login</a>.";
             } else {
                 $error = "Registrasi gagal: " . mysqli_error($conn);
@@ -56,69 +78,87 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registrasi Akun</title>
     <style>
-        /* Gaya dasar dan pemusatan */
-        body { font-family: Arial, sans-serif; background-color: #4CAF50; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        /* Menggunakan font Inter untuk tampilan yang lebih bersih */
+        body { font-family: 'Inter', sans-serif; background-color: #3b82f6; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
         
         /* Kontainer Formulir */
         .form-container { 
             background: white; 
-            padding: 2rem; 
-            border-radius: 10px; 
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); /* Shadow lebih kuat */
-            width: 350px; 
+            padding: 2.5rem; 
+            border-radius: 12px; 
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2); 
+            width: 380px; 
+            max-width: 90%;
+            transition: transform 0.3s ease;
         }
         
         /* Judul */
         h2 { 
             text-align: center; 
-            color: #333; 
+            color: #1f2937; 
             margin-bottom: 1.5rem; 
-            border-bottom: 2px solid #ddd; 
-            padding-bottom: 0.5rem; 
+            border-bottom: 2px solid #e5e7eb; 
+            padding-bottom: 0.8rem; 
+            font-size: 1.5rem;
         }
         
         /* Input dan Label */
-        .form-group { margin-bottom: 1rem; }
-        .form-group label { display: block; margin-bottom: 0.5rem; font-weight: bold; color: #555; }
+        .form-group { margin-bottom: 1.25rem; }
+        .form-group label { display: block; margin-bottom: 0.4rem; font-weight: 600; color: #4b5563; font-size: 0.9rem; }
         .form-group input { 
             width: 100%; 
-            padding: 0.75rem; 
-            border: 1px solid #ccc; 
-            border-radius: 5px; 
+            padding: 0.85rem; 
+            border: 1px solid #d1d5db; 
+            border-radius: 8px; 
             box-sizing: border-box; 
-            transition: border-color 0.3s; 
+            transition: border-color 0.3s, box-shadow 0.3s; 
+            font-size: 1rem;
         }
-        .form-group input:focus { border-color: #4CAF50; outline: none; }
+        .form-group input:focus { 
+            border-color: #3b82f6; 
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3); 
+            outline: none; 
+        }
         
         /* Tombol Utama (Daftar) */
         .btn-primary { 
             width: 100%; 
-            padding: 0.75rem; 
-            background-color: #4CAF50; 
+            padding: 0.9rem; 
+            background-color: #3b82f6; 
             color: white; 
             border: none; 
-            border-radius: 5px; 
+            border-radius: 8px; 
             cursor: pointer; 
             font-size: 1rem; 
-            font-weight: bold; 
-            transition: background-color 0.3s; 
-            margin-top: 0.5rem;
+            font-weight: 700; 
+            transition: background-color 0.3s, box-shadow 0.3s; 
+            margin-top: 1rem;
         }
-        .btn-primary:hover { background-color: #45a049; }
+        .btn-primary:hover { 
+            background-color: #2563eb; 
+            box-shadow: 0 5px 15px rgba(59, 130, 246, 0.4);
+        }
         
         /* Link Bawah */
-        .link-text { text-align: center; margin-top: 1.5rem; font-size: 0.9rem; }
-        .link-text a { color: #007bff; text-decoration: none; font-weight: bold; }
+        .link-text { text-align: center; margin-top: 1.5rem; font-size: 0.9rem; color: #6b7280; }
+        .link-text a { 
+            color: #3b82f6; 
+            text-decoration: none; 
+            font-weight: 700; 
+            transition: color 0.3s;
+        }
+        .link-text a:hover { color: #2563eb; text-decoration: underline; }
         
         /* Pesan Status */
-        .message { padding: 0.75rem; margin-bottom: 1rem; border-radius: 5px; text-align: center; }
-        .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .message { padding: 0.75rem; margin-bottom: 1.25rem; border-radius: 8px; text-align: center; font-weight: 600; font-size: 0.95rem; }
+        .success { background-color: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
+        .error { background-color: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+        .text-green-600 { color: #059669; font-weight: 700; }
     </style>
 </head>
 <body>
     <div class="form-container">
-        <h2>Daftar Akun Baru</h2>
+        <h2>SIGN UP</h2>
         
         <?php if ($message): ?>
             <div class="message success"><?php echo $message; ?></div>
