@@ -1,188 +1,328 @@
-<?php
-// Asumsikan 'koneksi.php' berisi $conn (koneksi MySQLi)
-include 'koneksi.php';
+<!DOCTYPE html>
+<html lang="en">
 
-// Query ringkasan
-$query_ringkasan = "SELECT 
-    SUM(CASE WHEN jenis = 'pemasukan' THEN jumlah ELSE 0 END) AS total_pemasukan,
-    SUM(CASE WHEN jenis = 'pengeluaran' THEN jumlah ELSE 0 END) AS total_pengeluaran,
-    (SUM(CASE WHEN jenis = 'pemasukan' THEN jumlah ELSE 0 END) - SUM(CASE WHEN jenis = 'pengeluaran' THEN jumlah ELSE 0 END)) AS saldo
-    FROM transaksi";
-$result_ringkasan = mysqli_query($conn, $query_ringkasan);
-$ringkasan = mysqli_fetch_assoc($result_ringkasan);
+<head>
 
-// Query transaksi terbaru
-$query_transaksi = "SELECT t.*, a.nama_akun FROM transaksi t JOIN akun a ON t.id_akun = a.id ORDER BY t.tanggal DESC LIMIT 5";
-$result_transaksi = mysqli_query($conn, $query_transaksi);
+	
+<?php 
+  include 'config.php';
+  // mengaktifkan session
+  session_start();
+  
+  error_reporting(0);
+  
+  // cek apakah user telah login, jika belum login maka di alihkan ke halaman login
+  if($_SESSION['status'] !="login"){
+    header("location:login.php");
+  } else {
+    if($_GET['action'] = 'delete') {
+
+        $deleteQuery = mysqli_query($conn,"DELETE FROM laporadmin WHERE id = '$commentId'");
+
+        if($deleteQuery) {
+            $msg = "Comment Deleted";
+        } else {
+            $error = "Something error";
+        }
+    } else{
+        $error = "Something error";
+    }
+  }
+
+  $approveid = $_GET['approveid'];
+  if ($approveid) {
+
+    /* 
+      Approve status meaning:
+      
+      0 = Waiting for approval
+      1 = Approved
+    */
+
+    $updateQuery = mysqli_query($conn,"UPDATE laporadmin SET status = 1 WHERE id = '$approveid'");
+
+    if($updateQuery) {
+        $msg = "Post approved";
+    } else {
+        $error = "Something error";
+    }
+  }
+ 
 ?>
 
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Keuangan</title>
-    <style>
-        /* Menggunakan font Inter untuk tampilan yang lebih bersih */
-        body { font-family: 'Inter', sans-serif; margin: 0; padding: 0; background-color: #f3f4f6; } 
-        header { 
-            background-color: #1f2937; /* Dark Gray */
-            color: white; 
-            padding: 1rem; 
-            text-align: center; 
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        
-        /* Gaya Navigasi Baru */
-        nav { 
-            background-color: #374151; /* Gray gelap untuk kontras */
-            color: white; 
-            padding: 0.75rem 0; 
-            display: flex;
-            justify-content: space-between; /* Untuk memisahkan navigasi utama dan tombol auth */
-            align-items: center;
-        }
-        .nav-links, .auth-links { 
-            display: flex; 
-            align-items: center; 
-            padding: 0 1rem;
-        }
-        nav a { 
-            color: white; 
-            margin: 0 1rem; 
-            text-decoration: none; 
-            padding: 0.5rem 0.75rem; 
-            border-radius: 4px;
-            transition: background-color 0.3s;
-        }
-        nav a:hover { 
-            background-color: #4b5563; 
-        }
-        
-        /* Gaya Tombol Auth (Signup/Login) */
-        .auth-links .btn-login {
-            background-color: transparent;
-            border: 1px solid white;
-        }
-        .auth-links .btn-signup {
-            background-color: #4CAF50; /* Hijau */
-            font-weight: bold;
-            margin-left: 0.5rem;
-            border: none;
-        }
-        .auth-links .btn-signup:hover {
-            background-color: #45a049;
-        }
+ 
 
-        /* Container dan komponen lainnya */
-        .container { max-width: 1200px; margin: 2rem auto; padding: 2rem; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        h2 { border-bottom: 2px solid #e5e7eb; padding-bottom: 0.5rem; margin-bottom: 1.5rem; color: #1f2937; }
-        .summary { display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap; }
-        .summary div { 
-            text-align: center; 
-            padding: 1.5rem; 
-            border: 1px solid #ddd; 
-            border-radius: 8px; 
-            flex: 1; 
-            min-width: 250px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            background-color: #ffffff;
-        }
-        .summary h3 { margin: 0 0 0.5rem 0; color: #10b981; } /* Hijau cerah untuk judul */
-        .summary p { font-size: 1.5rem; font-weight: bold; color: #374151; }
-        .summary-saldo { background-color: #d1fae5; border-color: #a7f3d0; } /* Highlight Saldo */
-        
-        /* Saldo Color Logic */
-        .saldo-amount.positive { color: #10b981; }
-        .saldo-amount.negative { color: #ef4444; }
-        .pemasukan-amount { color: #10b981; }
-        .pengeluaran-amount { color: #ef4444; }
+  
+  <title>Manajemen Keuangan Hikari</title>
+	<meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="">
+  <meta name="author" content="">
 
-        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-        table th, table td { border: 1px solid #e5e7eb; padding: 0.75rem; text-align: left; }
-        table th { background-color: #f9fafb; color: #374151; font-weight: 600; }
-        .jenis-pemasukan { color: #10b981; font-weight: bold; }
-        .jenis-pengeluaran { color: #ef4444; font-weight: bold; }
-        footer { text-align: center; padding: 1rem; background-color: #374151; color: white; margin-top: 2rem; font-size: 0.9rem; }
-    </style>
+  <!-- Custom fonts for this template-->
+  <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+  <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
+
+  <!-- Custom styles for this template-->
+  <link href="css/sb-admin-2.min.css" rel="stylesheet">
+
 </head>
-<body>
-    <header>
-        <h1>LowLite
-        </h1>
-    </header>
-    
-    <!-- Peningkatan Struktur NAV -->
-    <nav>
-        <div class="nav-links">
-            <a href="index.php">Home</a>
-            <a href="tambah_transaksi.php">Tambah Transaksi</a>
-            <a href="laporan.php">Laporan</a>
+
+<body id="page-top">
+
+  <!-- Page Wrapper -->
+  <div id="wrapper">
+
+    <!-- Sidebar -->
+    <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
+
+      <!-- Sidebar - Brand -->
+      <a class="sidebar-brand d-flex align-items-center justify-content-center" href="index.php">
+        <div class="sidebar-brand-icon rotate-n-15">
         </div>
-        <div class="auth-links">
-            <!-- Tautan Login dan Signup ditambahkan di sini -->
-            <a href="login.php" class="btn-login">Login</a>
-            <a href="register.php" class="btn-signup">Signup</a>
+        <div class="sidebar-brand-text mx-3">Manajemen Keuangan Hikari </div>
+      </a>
+
+      <!-- Divider -->
+      <hr class="sidebar-divider my-0">
+
+      <!-- Nav Item - Dashboard -->
+      <li class="nav-item active">
+        <a class="nav-link" href="index.php">
+          <i class="fas fa-fw fa-tachometer-alt"></i>
+          <span>Dashboard</span></a>
+      </li>
+
+      
+
+      
+      <!-- Divider -->
+      <hr class="sidebar-divider">
+
+      <!-- Heading -->
+      <div class="sidebar-heading">
+        Addons
+      </div>
+
+      <!-- Nav Item - Header Pages Collapse Menu -->
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseHeader" aria-expanded="true" aria-controls="collapsePages">
+          <i class="fas fa-fw fa-list"></i>
+          <span>Akun</span>
+        </a>
+        <div id="collapseHeader" class="collapse" aria-labelledby="headingPages" data-parent="#accordionSidebar">
+          <div class="bg-white py-2 collapse-inner rounded">
+            <a class="collapse-item" href="buatakun.php">Buat Akun user</a>
+            <a class="collapse-item" href="manageakun.php">Manage Akun user</a>
+<!--
+            <a class="collapse-item" href="update-background.php">Update Background</a>
+            <a class="collapse-item" href="update-logo.php">Update Logo</a>  
+-->
+          </div>
         </div>
-    </nav>
-    
-    <div class="container">
-        <h2>Ringkasan Keuangan</h2>
-        <div class="summary">
-            <div class="summary-saldo">
-                <h3>Total Saldo</h3>
-                <p class="saldo-amount <?php echo ($ringkasan['saldo'] >= 0 ? 'positive' : 'negative'); ?>">
-                    Rp <?php echo number_format($ringkasan['saldo'] ?? 0, 0, ',', '.'); ?>
-                </p>
+      </li>
+
+      
+
+      <!-- Divider -->
+      <hr class="sidebar-divider d-none d-md-block">
+
+      <!-- Sidebar Toggler (Sidebar) -->
+      <div class="text-center d-none d-md-inline">
+        <button class="rounded-circle border-0" id="sidebarToggle"></button>
+      </div>
+
+    </ul>
+    <!-- End of Sidebar -->
+
+    <!-- Content Wrapper -->
+    <div id="content-wrapper" class="d-flex flex-column">
+
+      <!-- Main Content -->
+      <div id="content">
+
+        <!-- Topbar -->
+        <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
+
+          <!-- Sidebar Toggle (Topbar) -->
+          <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
+            <i class="fa fa-bars"></i>
+          </button>
+
+          <!-- Topbar Search -->
+          
+
+          <!-- Topbar Navbar -->
+          <ul class="navbar-nav ml-auto">
+
+            <!-- Nav Item - Search Dropdown (Visible Only XS) -->
+            
+            <!-- Nav Item - User Information -->
+            <li class="nav-item dropdown no-arrow">
+              <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <span class="mr-2 d-none d-lg-inline text-gray-600 small"><?php
+					// menampilkan pesan selamat datang
+					echo "Hai, selamat datang ". $_SESSION['username']; ?></span>
+                <img class="img-profile rounded-circle" src="img/Capture.jpg">
+              </a>
+              <!-- Dropdown - User Information -->
+              <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="userDropdown">
+                <a class="dropdown-item" href="#">
+                  <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i>
+                  Profile
+                </a>
+                <a class="dropdown-item" href="#">
+                  <i class="fas fa-cogs fa-sm fa-fw mr-2 text-gray-400"></i>
+                  Settings
+                </a>
+                <a class="dropdown-item" href="#">
+                  <i class="fas fa-list fa-sm fa-fw mr-2 text-gray-400"></i>
+                  Activity Log
+                </a>
+                <div class="dropdown-divider"></div>
+                <a class="dropdown-item" href="logout.php" data-toggle="modal" data-target="#logoutModal">
+                  <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
+                  Logout
+                </a>
+              </div>
+            </li>
+
+          </ul>
+
+        </nav>
+        <!-- End of Topbar -->
+
+        <div class="container-fluid">
+
+          <!-- Page Heading -->
+          <h1 class="h3 mb-4 text-gray-800">Pesan masuk hari ini!</h1>
+
+          <?php
+            if(($commentId != null && $msg != null) || ($approveid != null && $msg != null)) {
+                ?>
+                <div class="alert alert-success" role="alert">
+                    <strong>Well done!</strong> <?php echo htmlentities($msg);?>
+                </div>
+                <?php
+            }
+
+            if(($commentId != null && $error != null) || ($approveid != null && $error != null)) {
+                ?>
+                <div class="alert alert-danger" role="alert">
+                    <strong>Oh snap!</strong> <?php echo htmlentities($error);?></div>
+                </div>
+                <?php
+            }
+          ?>
+
+          <!-- DataTales Example -->
+          <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary float-left">Ada Pesan Masuk Nih Kakak!</h6>
             </div>
-            <div>
-                <h3>Total Pemasukan</h3>
-                <p class="pemasukan-amount">
-                    Rp <?php echo number_format($ringkasan['total_pemasukan'] ?? 0, 0, ',', '.'); ?>
-                </p>
-            </div>
-            <div>
-                <h3>Total Pengeluaran</h3>
-                <p class="pengeluaran-amount">
-                    Rp <?php echo number_format($ringkasan['total_pengeluaran'] ?? 0, 0, ',', '.'); ?>
-                </p>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>Name</th>
+                                <th>Username</th>
+                                <th>Comment</th>
+                                <th>Waktu Pesan</th>
+                            </tr>
+                        </thead>
+                        
+                        <tbody>
+                            <?php
+                                $no = 1;
+
+                                /*
+                                    Status comments meaning:
+
+                                    0 = Waiting for approval
+                                    1 = Approved
+                                */
+                                $selectQuery=mysqli_query($conn,"SELECT * FROM laporadmin WHERE status = 0 ORDER BY id DESC");
+                                $rowcount=mysqli_num_rows($selectQuery);
+                                while($row = mysqli_fetch_array($selectQuery)) {
+                            ?>
+                            <tr>
+                                <td><?php echo $no++; ?></td>
+                                <td><?php echo $row['nama']; ?></td>
+                                <td><?php echo $row['username']; ?></td>
+                                <td><?php echo $row['comment']; ?></td>
+                                <td><?php echo $row['waktupesan']; ?></td>
+                            </tr>
+                            <?php
+                                }
+                            ?>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
-        
-        <h2>Transaksi Terbaru (5 Data)</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Tanggal</th>
-                    <th>Akun</th>
-                    <th>Jenis</th>
-                    <th>Jumlah</th>
-                    <th>Deskripsi</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if (mysqli_num_rows($result_transaksi) > 0): ?>
-                    <?php while ($row = mysqli_fetch_assoc($result_transaksi)): ?>
-                    <tr>
-                        <td><?php echo date('d M Y', strtotime($row['tanggal'])); ?></td>
-                        <td><?php echo htmlspecialchars($row['nama_akun']); ?></td>
-                        <td class="<?php echo ($row['jenis'] == 'pemasukan' ? 'jenis-pemasukan' : 'jenis-pengeluaran'); ?>">
-                            <?php echo ucfirst($row['jenis']); ?>
-                        </td>
-                        <td>Rp <?php echo number_format($row['jumlah'], 0, ',', '.'); ?></td>
-                        <td><?php echo htmlspecialchars($row['deskripsi']); ?></td>
-                    </tr>
-                    <?php endwhile; ?>
-                <?php else: ?>
-                    <tr>
-                        <td colspan="5" style="text-align: center; color: #9ca3af;">Belum ada data transaksi yang tercatat.</td>
-                    </tr>
-                <?php endif; ?>
-            </tbody>
-        </table>
+  	</div>
+  <!-- /.container-fluid -->
+
+      <!-- Footer -->
+      <footer class="sticky-footer bg-white">
+        <div class="container my-auto">
+          <div class="copyright text-center my-auto">
+            <span>Copyright &copy; Hikare Are</span>
+          </div>
+        </div>
+      </footer>
+      <!-- End of Footer -->
+
     </div>
-    <footer>
-        <p>&copy; 2023 Aplikasi Manajemen Keuangan LowLite.</p>
-    </footer>
+    <!-- End of Content Wrapper -->
+
+  </div>
+  <!-- End of Page Wrapper -->
+
+  <!-- Scroll to Top Button-->
+  <a class="scroll-to-top rounded" href="#page-top">
+    <i class="fas fa-angle-up"></i>
+  </a>
+
+  <!-- Logout Modal-->
+  <div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLabel">Ready to Leave?</h5>
+          <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">×</span>
+          </button>
+        </div>
+        <div class="modal-body">Select "Logout" below if you are ready to end your current session.</div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
+          <a class="btn btn-primary" href="logout.php">Logout</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap core JavaScript-->
+  <script src="vendor/jquery/jquery.min.js"></script>
+  <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Core plugin JavaScript-->
+  <script src="vendor/jquery-easing/jquery.easing.min.js"></script>
+
+  <!-- Custom scripts for all pages-->
+  <script src="js/sb-admin-2.min.js"></script>
+
+  <!-- Page level plugins -->
+  <script src="vendor/chart.js/Chart.min.js"></script>
+
+  <!-- Page level custom scripts -->
+  <script src="js/demo/chart-area-demo.js"></script>
+  <script src="js/demo/chart-pie-demo.js"></script>
+
 </body>
+
 </html>

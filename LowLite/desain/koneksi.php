@@ -5,7 +5,10 @@ $pass = ''; // Ganti dengan password MySQL Anda
 $db = 'keuangan_db';
 
 $conn = mysqli_connect($host, $user, $pass, $db);
-if (!$conn) {
-    die("Koneksi gagal: " . mysqli_connect_error());
-}
+if ( $conn->connect_errno ) {
+    die('Connect Error: ' . $db->connect_errno);
+	} 
+else {
+		
+	}
 ?>
